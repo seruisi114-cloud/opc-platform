@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双向评价 — OPC职业平台</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="prototype-banner">
+  🎨 OPC职业平台测试 — 交互原型 · 仅供验证使用
+  <span>（数据均为模拟，不涉及真实交易）</span>
+</div>
+
+<nav>
+  <a href="../index.html" class="nav-brand">OPC<span>职业平台</span></a>
+  <div class="nav-links">
+    <a href="tasks.html">任务大厅</a>
+    <a href="opc-hall.html">OPC大厅</a>
+    <a href="my-tasks.html">我的任务</a>
+    <a href="chat.html">消息</a>
+    <a href="eval.html" class="active">评价</a>
+  </div>
+  <div class="nav-user">
+    <div class="avatar">我</div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="section-header"><h1>双向评价</h1></div>
+  <div class="eval-grid">
+    <div class="eval-card">
+      <h3>对 OPC 的评价</h3>
+      <div class="eval-item"><span>专业能力</span>
+        <div class="score-stars" data-field="skill">
+          <span onclick="setStar(this, 'skill', 1)">★</span>
+          <span onclick="setStar(this, 'skill', 2)">★</span>
+          <span onclick="setStar(this, 'skill', 3)">★</span>
+          <span onclick="setStar(this, 'skill', 4)">★</span>
+          <span onclick="setStar(this, 'skill', 5)">★</span>
+        </div>
+      </div>
+      <div class="eval-item"><span>沟通响应</span>
+        <div class="score-stars" data-field="response">
+          <span onclick="setStar(this, 'response', 1)">★</span>
+          <span onclick="setStar(this, 'response', 2)">★</span>
+          <span onclick="setStar(this, 'response', 3)">★</span>
+          <span onclick="setStar(this, 'response', 4)">★</span>
+          <span onclick="setStar(this, 'response', 5)">★</span>
+        </div>
+      </div>
+      <div class="eval-item"><span>按时交付</span>
+        <div class="score-stars" data-field="delivery">
+          <span onclick="setStar(this, 'delivery', 1)">★</span>
+          <span onclick="setStar(this, 'delivery', 2)">★</span>
+          <span onclick="setStar(this, 'delivery', 3)">★</span>
+          <span onclick="setStar(this, 'delivery', 4)">★</span>
+          <span onclick="setStar(this, 'delivery', 5)">★</span>
+        </div>
+      </div>
+      <div class="eval-item"><span>整体推荐</span>
+        <div class="score-stars" data-field="overall">
+          <span onclick="setStar(this, 'overall', 1)">★</span>
+          <span onclick="setStar(this, 'overall', 2)">★</span>
+          <span onclick="setStar(this, 'overall', 3)">★</span>
+          <span onclick="setStar(this, 'overall', 4)">★</span>
+          <span onclick="setStar(this, 'overall', 5)">★</span>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:12px;">
+        <label>详细评价（选填）</label>
+        <textarea id="eval-text" placeholder="写下你的评价，帮助其他需求方了解这位 OPC..."></textarea>
+      </div>
+    </div>
+    <div class="eval-card">
+      <h3>OPC 对需求方的评价</h3>
+      <div class="eval-item"><span>需求描述清晰</span>
+        <div class="score-stars" data-field="clarity">
+          <span onclick="setStar(this, 'clarity', 1)">★</span>
+          <span onclick="setStar(this, 'clarity', 2)">★</span>
+          <span onclick="setStar(this, 'clarity', 3)">★</span>
+          <span onclick="setStar(this, 'clarity', 4)">★</span>
+          <span onclick="setStar(this, 'clarity', 5)">★</span>
+        </div>
+      </div>
+      <div class="eval-item"><span>沟通配合</span>
+        <div class="score-stars" data-field="coop">
+          <span onclick="setStar(this, 'coop', 1)">★</span>
+          <span onclick="setStar(this, 'coop', 2)">★</span>
+          <span onclick="setStar(this, 'coop', 3)">★</span>
+          <span onclick="setStar(this, 'coop', 4)">★</span>
+          <span onclick="setStar(this, 'coop', 5)">★</span>
+        </div>
+      </div>
+      <div class="eval-item"><span>付款及时</span>
+        <div class="score-stars" data-field="payment">
+          <span onclick="setStar(this, 'payment', 1)">★</span>
+          <span onclick="setStar(this, 'payment', 2)">★</span>
+          <span onclick="setStar(this, 'payment', 3)">★</span>
+          <span onclick="setStar(this, 'payment', 4)">★</span>
+          <span onclick="setStar(this, 'payment', 5)">★</span>
+        </div>
+      </div>
+      <div class="eval-item"><span>整体推荐</span>
+        <div class="score-stars" data-field="opc-overall">
+          <span onclick="setStar(this, 'opc-overall', 1)">★</span>
+          <span onclick="setStar(this, 'opc-overall', 2)">★</span>
+          <span onclick="setStar(this, 'opc-overall', 3)">★</span>
+          <span onclick="setStar(this, 'opc-overall', 4)">★</span>
+          <span onclick="setStar(this, 'opc-overall', 5)">★</span>
+        </div>
+      </div>
+      <div class="eval-summary" style="margin-top:12px;">
+        <strong>交易已完成</strong><br>
+        订单 #001 · Logo设计 · ¥3,000<br>
+        2026-04-20 完成交付
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:18px; text-align:right;">
+    <button class="btn btn-primary" onclick="submitEval()">提交评价</button>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+<script src="../js/app.js"></script>
+<script>
+function submitEval() {
+  const data = getData();
+  if (Object.keys(data.evalScores).length < 8) {
+    showNotif('请完成所有评分项', 'error'); return;
+  }
+  showNotif('评价提交成功！感谢您的反馈', 'success');
+  setTimeout(() => location.href = 'tasks.html', 1500);
+}
+</script>
+</body>
+</html>

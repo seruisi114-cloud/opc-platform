@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPC大厅 — OPC职业平台</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="prototype-banner">
+  🎨 OPC职业平台测试 — 交互原型 · 仅供验证使用
+  <span>（数据均为模拟，不涉及真实交易）</span>
+</div>
+
+<nav>
+  <a href="../index.html" class="nav-brand">OPC<span>职业平台</span></a>
+  <div class="nav-links">
+    <a href="tasks.html">任务大厅</a>
+    <a href="opc-hall.html" class="active">OPC大厅</a>
+    <a href="my-tasks.html">我的任务</a>
+    <a href="chat.html">消息</a>
+    <a href="eval.html">评价</a>
+  </div>
+  <div class="nav-user">
+    <div class="avatar">我</div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="section-header">
+    <h1>OPC 大厅</h1>
+    <a href="tasks.html" class="btn btn-outline">发布任务</a>
+  </div>
+  <div class="proto-note">
+    💡 需求方可以主动寻找有能力的 OPC，直接发起合作邀请。双方聊好后，再正式发布任务、签订合约。
+  </div>
+  <div class="filters">
+    <select class="filter-select" id="opc-filter-category">
+      <option value="">全部专长</option>
+      <option>设计</option><option>开发</option><option>文案</option>
+      <option>视频动画</option><option>营销</option><option>音频配音</option>
+    </select>
+    <select class="filter-select" id="opc-filter-sort">
+      <option value="rating">评分最高</option>
+      <option value="orders">成交最多</option>
+      <option value="rate">成交率最高</option>
+    </select>
+    <div class="filter-tag selected" id="opc-filter-online" onclick="toggleTag(this); renderOPCs()">
+      <span class="dot" style="background:#10B981;"></span> 在线可聊
+    </div>
+  </div>
+  <div class="opc-list" id="opc-list"></div>
+</div>
+
+<div class="notif" id="notif"></div>
+<script src="../js/app.js"></script>
+<script>
+function renderOPCs() {
+  const data = getData();
+  const cat = document.getElementById('opc-filter-category').value;
+  const sort = document.getElementById('opc-filter-sort').value;
+  const onlineOnly = document.getElementById('opc-filter-online').classList.contains('selected');
+
+  let filtered = data.opcs.filter(o => {
+    if (cat && o.category !== cat) return false;
+    if (onlineOnly && !o.online) return false;
+    return true;
+  });
+
+  if (sort === 'rating') filtered.sort((a, b) => b.rating - a.rating);
+  else if (sort === 'orders') filtered.sort((a, b) => b.orders - a.orders);
+  else if (sort === 'rate') filtered.sort((a, b) => b.rate - a.rate);
+
+  document.getElementById('opc-list').innerHTML = filtered.length === 0
+    ? `<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-text">暂无符合条件的 OPC</div></div>`
+    : filtered.map(o => opcCardHTML(o)).join('');
+}
+
+document.getElementById('opc-filter-category').addEventListener('change', renderOPCs);
+document.getElementById('opc-filter-sort').addEventListener('change', renderOPCs);
+renderOPCs();
+</script>
+</body>
+</html>

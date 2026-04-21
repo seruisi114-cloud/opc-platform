@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的任务 — OPC职业平台</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="prototype-banner">
+  🎨 OPC职业平台测试 — 交互原型 · 仅供验证使用
+  <span>（数据均为模拟，不涉及真实交易）</span>
+</div>
+
+<nav>
+  <a href="../index.html" class="nav-brand">OPC<span>职业平台</span></a>
+  <div class="nav-links">
+    <a href="tasks.html">任务大厅</a>
+    <a href="opc-hall.html">OPC大厅</a>
+    <a href="my-tasks.html" class="active">我的任务</a>
+    <a href="chat.html">消息</a>
+    <a href="eval.html">评价</a>
+  </div>
+  <div class="nav-user">
+    <div class="avatar">我</div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="section-header">
+    <h1>我的任务</h1>
+    <button class="btn btn-primary" onclick="openPublishModal()">发布任务</button>
+  </div>
+  <div class="my-tasks-tabs">
+    <button class="active" onclick="switchMyTab(this, 'published')">我发布的</button>
+    <button onclick="switchMyTab(this, 'accepted')">我承接的</button>
+  </div>
+  <div id="my-tasks-list"></div>
+</div>
+
+<!-- PUBLISH MODAL -->
+<div class="modal-overlay hidden" id="publish-modal">
+  <div class="modal">
+    <h2>发布任务</h2>
+    <div class="form-group">
+      <label>任务标题</label>
+      <input id="pub-title" placeholder="例如：帮我设计一个Logo">
+    </div>
+    <div class="form-group">
+      <label>任务描述</label>
+      <textarea id="pub-desc" placeholder="详细描述你的需求..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>分类</label>
+        <select id="pub-category">
+          <option>设计</option><option>开发</option><option>文案</option>
+          <option>视频动画</option><option>营销</option><option>音频配音</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>类型</label>
+        <select id="pub-type">
+          <option value="short">短期</option><option value="long">长期</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>预算（元）</label>
+        <input id="pub-price" type="number" placeholder="3000">
+      </div>
+      <div class="form-group">
+        <label>截止日期</label>
+        <input id="pub-deadline" type="date">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>验收标准</label>
+      <textarea id="pub-standards" placeholder="明确说出什么是"完成"..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closePublishModal()">取消</button>
+      <button class="btn btn-primary" onclick="publishTask()">发布</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+<script src="../js/app.js"></script>
+<script>
+let _myTab = 'published';
+function switchMyTab(btn, type) {
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _myTab = type;
+  renderMyTasks();
+}
+function renderMyTasks() {
+  const data = getData();
+  const tasks = _myTab === 'published' ? data.myPublished : data.myAccepted;
+  const list = document.getElementById('my-tasks-list');
+  if (!tasks.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-text">暂无${_myTab === 'published' ? '发布的任务' : '承接的任务'}</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:14px;" onclick="openPublishModal()">发布任务</button>
+      </div>`;
+    return;
+  }
+  list.innerHTML = tasks.map(t => `
+    <div class="task-card" ${_myTab === 'published' ? `onclick="location.href='task-detail.html?id=${t.id}'"` : ''}>
+      <div class="task-top">
+        <div class="task-title">${t.title}</div>
+        <div class="task-price">¥${t.price}</div>
+      </div>
+      <div class="task-tags">
+        <span class="tag ${t.type==='short'?'tag-blue':'tag-green'}">${t.type==='short'?'短期':'长期'}</span>
+        <span class="tag tag-blue">${t.status === 'published' ? '可承接' : '进行中'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+renderMyTasks();
+</script>
+</body>
+</html>

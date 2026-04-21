@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消息中心 — OPC职业平台</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="prototype-banner">
+  🎨 OPC职业平台测试 — 交互原型 · 仅供验证使用
+  <span>（数据均为模拟，不涉及真实交易）</span>
+</div>
+
+<nav>
+  <a href="../index.html" class="nav-brand">OPC<span>职业平台</span></a>
+  <div class="nav-links">
+    <a href="tasks.html">任务大厅</a>
+    <a href="opc-hall.html">OPC大厅</a>
+    <a href="my-tasks.html">我的任务</a>
+    <a href="chat.html" class="active">消息</a>
+    <a href="eval.html">评价</a>
+  </div>
+  <div class="nav-user">
+    <div class="avatar">我</div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="section-header"><h1>消息中心</h1></div>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div>
+        <div class="chat-header-title" id="chat-title">张明（OPC设计师）</div>
+        <div class="chat-header-sub" id="chat-sub">可承接：Logo / UI设计</div>
+      </div>
+      <div class="chat-status">
+        <div class="status-dot"></div> 在线
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-area">
+      <input class="chat-input" id="chat-input" placeholder="输入消息...（回车发送）" onkeydown="if(event.key==='Enter') sendChat()">
+      <button class="btn btn-primary btn-sm" onclick="sendChat()">发送</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+<script src="../js/app.js"></script>
+<script>
+function renderChat() {
+  const data = getData();
+  const c = document.getElementById('chat-messages');
+  c.innerHTML = data.chatMessages.map(m => `
+    <div class="msg ${m.role}">
+      <div class="msg-avatar">${m.role === 'opc' ? 'OPC' : '我'}</div>
+      <div>
+        <div class="msg-bubble">${m.text}</div>
+        <div class="msg-time">${m.time}</div>
+      </div>
+    </div>
+  `).join('');
+  c.scrollTop = c.scrollHeight;
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const data = getData();
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  data.chatMessages.push({ role: 'user', text, time });
+  input.value = '';
+  saveData(data);
+  renderChat();
+  setTimeout(() => {
+    const replies = [
+      '收到！我看看怎么处理，稍等~',
+      '没问题，这个我来搞定！',
+      '好的，我马上安排，有问题随时聊。',
+      '了解！我先出个方案，你看看方向对不对。'
+    ];
+    const data2 = getData();
+    const t = new Date();
+    const replyTime = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+    data2.chatMessages.push({ role: 'opc', text: replies[Math.floor(Math.random() * replies.length)], time: replyTime });
+    saveData(data2);
+    renderChat();
+  }, 1200);
+}
+
+renderChat();
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>任务详情 — OPC职业平台</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="prototype-banner">
+  🎨 OPC职业平台测试 — 交互原型 · 仅供验证使用
+  <span>（数据均为模拟，不涉及真实交易）</span>
+</div>
+
+<nav>
+  <a href="../index.html" class="nav-brand">OPC<span>职业平台</span></a>
+  <div class="nav-links">
+    <a href="tasks.html">任务大厅</a>
+    <a href="opc-hall.html">OPC大厅</a>
+    <a href="my-tasks.html">我的任务</a>
+    <a href="chat.html">消息</a>
+    <a href="eval.html">评价</a>
+  </div>
+  <div class="nav-user">
+    <div class="avatar">我</div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="detail-header">
+    <a href="tasks.html" class="back-btn">←</a>
+    <div class="detail-title" id="detail-title">任务详情</div>
+  </div>
+  <div class="detail-grid">
+    <div class="detail-main">
+      <div class="card">
+        <div class="card-title">任务描述</div>
+        <div id="detail-desc" style="font-size:13px; line-height:1.7; color:#374151;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">验收标准</div>
+        <div id="detail-standards" style="font-size:13px; line-height:1.7; color:#374151;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">交付记录</div>
+        <div id="detail-delivery" style="font-size:13px; color:var(--text-light);">等待 OPC 提交交付物</div>
+      </div>
+      <div class="card">
+        <div class="card-title">沟通记录</div>
+        <a href="chat.html" class="btn btn-outline btn-sm">进入对话 →</a>
+      </div>
+    </div>
+    <div class="detail-side">
+      <div class="card">
+        <div class="card-title">任务报酬</div>
+        <div class="price-display" id="detail-price">¥0</div>
+        <div style="margin-top:6px; font-size:12px; color:var(--text-light);">
+          诚意金：<span id="detail-deposit" style="font-weight:600; color:var(--text);">¥0</span>
+        </div>
+        <div style="margin-top:4px; font-size:12px; color:var(--text-light);">
+          佣金 10%：平台收取
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">基本信息</div>
+        <div class="info-row"><span class="info-label">分类</span><span class="info-val" id="detail-category">-</span></div>
+        <div class="info-row"><span class="info-label">类型</span><span class="info-val" id="detail-type">-</span></div>
+        <div class="info-row"><span class="info-label">发布时间</span><span class="info-val" id="detail-time">-</span></div>
+        <div class="info-row"><span class="info-label">浏览</span><span class="info-val" id="detail-views">-</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">托管流程</div>
+        <div class="escrow-status" id="escrow-status"></div>
+      </div>
+      <div class="card action-card" id="detail-action-card"></div>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+<script src="../js/app.js"></script>
+<script>
+(function() {
+  const id = parseInt(getParam('id'));
+  const data = getData();
+  const t = data.tasks.find(x => x.id === id);
+  if (!t) { document.getElementById('detail-title').textContent = '任务未找到'; return; }
+
+  document.getElementById('detail-title').textContent = t.title;
+  document.getElementById('detail-desc').textContent = t.desc;
+  document.getElementById('detail-standards').innerHTML = t.standards.replace(/\n/g, '<br>');
+  document.getElementById('detail-price').textContent = '¥' + t.price;
+  document.getElementById('detail-deposit').textContent = '¥' + t.deposit;
+  document.getElementById('detail-category').textContent = t.category;
+  document.getElementById('detail-type').textContent = t.type === 'short' ? '短期' : '长期';
+  document.getElementById('detail-time').textContent = t.time;
+  document.getElementById('detail-views').textContent = t.views;
+  document.getElementById('detail-delivery').textContent = t.delivery ? '✅ 已提交：' + t.delivery : '等待 OPC 提交交付物';
+
+  renderEscrowStatus('escrow-status', t.escrowStep);
+
+  const ac = document.getElementById('detail-action-card');
+  if (t.status === 'published') {
+    ac.innerHTML = '<button class="btn btn-primary" onclick="acceptTask()">立即承接</button><a href="chat.html" class="btn btn-outline">💬 联系需求方</a>';
+  } else if (t.escrowStep === 3 && t.status === 'in_progress') {
+    ac.innerHTML = '<a href="eval.html" class="btn btn-success">去验收评价</a>';
+  } else if (t.escrowStep >= 4) {
+    ac.innerHTML = '<button class="btn btn-outline" disabled>✅ 已完成</button>';
+  } else {
+    ac.innerHTML = '<a href="chat.html" class="btn btn-outline">💬 进入对话</a>';
+  }
+})();
+
+function acceptTask() {
+  const id = parseInt(getParam('id'));
+  const data = getData();
+  const t = data.tasks.find(x => x.id === id);
+  if (t) {
+    t.escrowStep = 2;
+    t.status = 'in_progress';
+    data.myAccepted.push(t);
+    saveData(data);
+    showNotif('承接成功！交易托管已生效，请开始工作', 'success');
+    setTimeout(() => location.reload(), 1500);
+  }
+}
+</script>
+</body>
+</html>
