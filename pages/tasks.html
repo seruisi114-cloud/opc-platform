@@ -17,13 +17,13 @@
     <a href="eval.html">评价</a>
   </div>
   <div class="nav-user">
-    <div class="avatar">我</div>
+    <div class="avatar">访</div>
   </div>
 </nav>
 <div class="container">
   <div class="section-header">
     <h1>任务大厅</h1>
-    <button class="btn btn-primary" onclick="openPublishModal()">发布任务</button>
+    <button class="btn btn-primary" id="btn-publish" onclick="openPublishModal()">发布任务</button>
   </div>
   <div class="filters">
     <select class="filter-select" id="filter-category">
@@ -37,14 +37,16 @@
       <option value="mid">500-3000元</option>
       <option value="high">3000元以上</option>
     </select>
-    <div class="filter-tag selected" id="filter-short" onclick="toggleTag(this); renderTasks()">
+    <div class="filter-tag selected" id="filter-short" onclick="toggleTag(this); loadTasksFromSupabase()">
       <span class="dot tag-short"></span> 短期
     </div>
-    <div class="filter-tag selected" id="filter-long" onclick="toggleTag(this); renderTasks()">
+    <div class="filter-tag selected" id="filter-long" onclick="toggleTag(this); loadTasksFromSupabase()">
       <span class="dot tag-long"></span> 长期
     </div>
   </div>
-  <div class="task-list" id="task-list"></div>
+  <div class="task-list" id="task-list">
+    <div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-text">加载中...</div></div>
+  </div>
 </div>
 <!-- PUBLISH MODAL -->
 <div class="modal-overlay hidden" id="publish-modal">
@@ -89,37 +91,166 @@
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closePublishModal()">取消</button>
-      <button class="btn btn-primary" onclick="publishTask()">发布</button>
+      <button class="btn btn-primary" id="pub-submit" onclick="publishTask()">发布</button>
     </div>
   </div>
 </div>
 <div class="notif" id="notif"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
 <script src="../js/app.js"></script>
 <script>
-function renderTasks() {
-  const data = getData();
+// ===== TASK CARD (localStorage-free) =====
+function taskCardHTML(t) {
+  return `
+    <div class="task-card" onclick="location.href='task-detail.html?id=${t.id}'">
+      <div class="task-top">
+        <div class="task-title">${escHtml(t.title)}</div>
+        <div class="task-price">¥${t.budget || t.price || 0}</div>
+      </div>
+      <div class="task-desc">${escHtml(t.description || t.desc || '')}</div>
+      <div class="task-meta">
+        <span>📁 ${t.category || '其他'}</span>
+        <span>👁 ${t.views || 0}</span>
+        <span>⏰ ${timeAgo(t.created_at || t.time)}</span>
+      </div>
+      <div class="task-tags">
+        <span class="tag ${(t.task_type || t.type) === 'short' ? 'tag-blue' : 'tag-green'}">${(t.task_type || t.type) === 'short' ? '短期' : '长期'}</span>
+        <span class="tag tag-blue">${t.status === 'published' ? '可承接' : '进行中'}</span>
+      </div>
+    </div>
+  `;
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const now = Date.now();
+  const ms = typeof ts === 'string' ? new Date(ts).getTime() : ts;
+  const diff = now - ms;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return '刚刚';
+  if (mins < 60) return mins + '分钟前';
+  if (hours < 24) return hours + '小时前';
+  if (days < 30) return days + '天前';
+  return new Date(ms).toLocaleDateString('zh-CN');
+}
+
+// ===== LOAD FROM SUPABASE =====
+let allTasks = [];
+
+async function loadTasksFromSupabase() {
+  const listEl = document.getElementById('task-list');
+  listEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-text">加载中...</div></div>';
+
+  const { data, error } = await fetchTasks();
+  allTasks = data || [];
+
+  if (error || allTasks.length === 0) {
+    // Fall back to demo data if empty
+    allTasks = getDemoTasks();
+  }
+
+  applyFilters();
+}
+
+function applyFilters() {
   const cat = document.getElementById('filter-category').value;
   const budget = document.getElementById('filter-budget').value;
   const showShort = document.getElementById('filter-short').classList.contains('selected');
   const showLong = document.getElementById('filter-long').classList.contains('selected');
-  const filtered = data.tasks.filter(t => {
+
+  const filtered = allTasks.filter(t => {
+    const type = t.task_type || t.type;
     if (cat && t.category !== cat) return false;
-    if (budget === 'low' && t.price >= 500) return false;
-    if (budget === 'mid' && (t.price < 500 || t.price > 3000)) return false;
-    if (budget === 'high' && t.price <= 3000) return false;
-    if (!showShort && t.type === 'short') return false;
-    if (!showLong && t.type === 'long') return false;
+    if (budget === 'low' && (t.budget || t.price) >= 500) return false;
+    if (budget === 'mid' && ((t.budget || t.price) < 500 || (t.budget || t.price) > 3000)) return false;
+    if (budget === 'high' && (t.budget || t.price) <= 3000) return false;
+    if (!showShort && type === 'short') return false;
+    if (!showLong && type === 'long') return false;
     return true;
   });
+
   document.getElementById('task-list').innerHTML = filtered.length === 0
     ? `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">暂无符合条件的任务</div></div>`
     : filtered.map(t => taskCardHTML(t)).join('');
 }
-document.getElementById('filter-category').addEventListener('change', renderTasks);
-document.getElementById('filter-budget').addEventListener('change', renderTasks);
-renderTasks();
+
+function getDemoTasks() {
+  return [
+    { id: 'demo-1', title: '帮我设计一个简约风格的App图标', description: '需要简约现代风格，用于一款健身App，主要颜色希望是橙色和深灰。', category: '设计', type: 'short', budget: 800, views: 23, created_at: new Date(Date.now() - 600000).toISOString(), status: 'published' },
+    { id: 'demo-2', title: '写一篇关于AI时代的公众号推文', description: '需要一篇1500字左右的深度推文，主题是AI时代年轻人的职业选择。', category: '文案', type: 'short', budget: 500, views: 45, created_at: new Date(Date.now() - 3600000).toISOString(), status: 'published' },
+    { id: 'demo-3', title: '搭建一个Node.js REST API', description: '需要搭建用户管理REST API，包含注册、登录、信息查询、修改功能。', category: '开发', type: 'long', budget: 3500, views: 67, created_at: new Date(Date.now() - 7200000).toISOString(), status: 'published' },
+    { id: 'demo-4', title: '制作一条30秒产品宣传动画', description: '为智能手表产品制作30秒宣传动画，风格偏科技感。', category: '视频动画', type: 'short', budget: 2000, views: 89, created_at: new Date(Date.now() - 10800000).toISOString(), status: 'in_progress' },
+  ];
+}
+
+// ===== PUBLISH =====
+function openPublishModal() {
+  const user = window.CURRENT_USER;
+  if (!user) {
+    if (confirm('登录后可发布任务，是否前往登录？')) {
+      location.href = 'login.html';
+    }
+    return;
+  }
+  document.getElementById('publish-modal').classList.remove('hidden');
+}
+
+function closePublishModal() {
+  document.getElementById('publish-modal').classList.add('hidden');
+}
+
+async function publishTask() {
+  const title = document.getElementById('pub-title').value.trim();
+  if (!title) { showNotif('请填写任务标题', 'error'); return; }
+  const price = parseInt(document.getElementById('pub-price').value) || 0;
+  const btn = document.getElementById('pub-submit');
+  btn.disabled = true;
+  btn.textContent = '发布中...';
+
+  const taskData = {
+    title,
+    description: document.getElementById('pub-desc').value,
+    category: document.getElementById('pub-category').value,
+    task_type: document.getElementById('pub-type').value,
+    budget: price,
+    deposit: Math.min(100, Math.round(price * 0.05)),
+    standards: document.getElementById('pub-standards').value,
+    status: 'published',
+    views: 0,
+    escrow_step: 0
+  };
+
+  const { data, error } = await insertTask(taskData);
+  if (error) {
+    showNotif('发布失败：' + error.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '发布';
+  } else {
+    closePublishModal();
+    showNotif('任务发布成功！', 'success');
+    loadTasksFromSupabase();
+    document.getElementById('pub-title').value = '';
+    document.getElementById('pub-desc').value = '';
+    document.getElementById('pub-price').value = '';
+    document.getElementById('pub-standards').value = '';
+    btn.disabled = false;
+    btn.textContent = '发布';
+  }
+}
+
+// ===== INIT =====
+document.getElementById('filter-category').addEventListener('change', applyFilters);
+document.getElementById('filter-budget').addEventListener('change', applyFilters);
+
+loadTasksFromSupabase();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/supabase.js"></script>
 </body>
 </html>
