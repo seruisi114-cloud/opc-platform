@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>消息中心 — OPC职业平台</title>
 <link rel="stylesheet" href="../css/style.css">
+<style>
+.chat-wrapper { display: flex; gap: 16px; height: calc(100vh - 140px); }
+.chat-sidebar { width: 240px; flex-shrink: 0; }
+.chat-sidebar h3 { font-size: 13px; color: var(--text-light); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.chat-task-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 6px; border: 1px solid var(--border); transition: all 0.15s; }
+.chat-task-item:hover { border-color: var(--primary); background: var(--bg); }
+.chat-task-item.active { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 8%, transparent); }
+.chat-task-item-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-task-item-meta { font-size: 11px; color: var(--text-light); }
+.chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.empty-chat { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light); font-size: 14px; }
+.realtime-dot { width: 8px; height: 8px; border-radius: 50%; background: #10B981; display: inline-block; margin-right: 4px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
 </head>
 <body>
 <nav>
@@ -16,75 +30,201 @@
     <a href="chat.html" class="active">消息</a>
     <a href="eval.html">评价</a>
   </div>
-  <div class="nav-user">
-    <div class="avatar">我</div>
-  </div>
+  <div class="nav-user"><div class="avatar">访</div></div>
 </nav>
 <div class="container">
-  <div class="section-header"><h1>消息中心</h1></div>
-  <div class="chat-container">
-    <div class="chat-header">
-      <div>
-        <div class="chat-header-title" id="chat-title">张明（OPC设计师）</div>
-        <div class="chat-header-sub" id="chat-sub">可承接：Logo / UI设计</div>
-      </div>
-      <div class="chat-status">
-        <div class="status-dot"></div> 在线
+  <div class="section-header"><h1>消息中心</h1><span id="realtime-status" style="font-size:12px;color:var(--text-light)"></span></div>
+  <div class="chat-wrapper">
+    <!-- 左侧：任务列表 -->
+    <div class="chat-sidebar">
+      <h3>我的任务</h3>
+      <div id="task-list-sidebar">
+        <div style="font-size:13px;color:var(--text-light);padding:12px 0;">加载中...</div>
       </div>
     </div>
-    <div class="chat-messages" id="chat-messages"></div>
-    <div class="chat-input-area">
-      <input class="chat-input" id="chat-input" placeholder="输入消息...（回车发送）" onkeydown="if(event.key==='Enter') sendChat()">
-      <button class="btn btn-primary btn-sm" onclick="sendChat()">发送</button>
+    <!-- 右侧：聊天区 -->
+    <div class="chat-main">
+      <div id="no-chat" class="empty-chat">← 选择一个任务开始聊天</div>
+      <div id="chat-area" class="hidden" style="display:flex;flex-direction:column;height:100%;">
+        <div class="chat-header">
+          <div>
+            <div class="chat-header-title" id="chat-title">任务聊天</div>
+            <div class="chat-header-sub" id="chat-sub">任务详情</div>
+          </div>
+          <div class="chat-status">
+            <span class="realtime-dot"></span> <span id="online-label">实时同步中</span>
+          </div>
+        </div>
+        <div class="chat-messages" id="chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;"></div>
+        <div class="chat-input-area">
+          <input class="chat-input" id="chat-input" placeholder="输入消息...（回车发送）" onkeydown="if(event.key==='Enter') sendChat()">
+          <button class="btn btn-primary btn-sm" onclick="sendChat()">发送</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 <div class="notif" id="notif"></div>
-<script src="../js/app.js"></script>
-<script>
-function renderChat() {
-  const data = getData();
-  const c = document.getElementById('chat-messages');
-  c.innerHTML = data.chatMessages.map(m => `
-    <div class="msg ${m.role}">
-      <div class="msg-avatar">${m.role === 'opc' ? 'OPC' : '我'}</div>
-      <div>
-        <div class="msg-bubble">${m.text}</div>
-        <div class="msg-time">${m.time}</div>
-      </div>
-    </div>
-  `).join('');
-  c.scrollTop = c.scrollHeight;
-}
-function sendChat() {
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
-  if (!text) return;
-  const data = getData();
-  const now = new Date();
-  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-  data.chatMessages.push({ role: 'user', text, time });
-  input.value = '';
-  saveData(data);
-  renderChat();
-  setTimeout(() => {
-    const replies = [
-      '收到！我看看怎么处理，稍等~',
-      '没问题，这个我来搞定！',
-      '好的，我马上安排，有问题随时聊。',
-      '了解！我先出个方案，你看看方向对不对。'
-    ];
-    const data2 = getData();
-    const t = new Date();
-    const replyTime = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
-    data2.chatMessages.push({ role: 'opc', text: replies[Math.floor(Math.random() * replies.length)], time: replyTime });
-    saveData(data2);
-    renderChat();
-  }, 1200);
-}
-renderChat();
-</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supabase.js"></script>
+<script>
+// ===== STATE =====
+let currentTaskId = null;
+let myTasks = [];
+let realtimeChannel = null;
+
+// ===== INIT =====
+async function init() {
+  const user = await getCurrentUser();
+  if (!user) {
+    document.getElementById('task-list-sidebar').innerHTML = '<div style="font-size:13px;color:var(--text-light);padding:12px 0;">请先 <a href="login.html" style="color:var(--primary)">登录</a> 查看消息</div>';
+    return;
+  }
+  loadMyTasks();
+}
+
+// ===== LOAD MY TASKS =====
+async function loadMyTasks() {
+  const user = await getCurrentUser();
+  const { data, error } = await fetchTasks({ client_id: user.id });
+  myTasks = data || [];
+  renderTaskList();
+}
+
+function renderTaskList() {
+  const el = document.getElementById('task-list-sidebar');
+  if (myTasks.length === 0) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text-light);padding:12px 0;">暂无任务，<a href="tasks.html" style="color:var(--primary)">去任务大厅</a>逛逛</div>';
+    return;
+  }
+  el.innerHTML = myTasks.map(t => `
+    <div class="chat-task-item${t.id === currentTaskId ? ' active' : ''}" onclick="selectTask('${t.id}')">
+      <div class="chat-task-item-title">${escHtml(t.title)}</div>
+      <div class="chat-task-item-meta">¥${t.budget || 0} · ${t.status === 'published' ? '待承接' : t.status}</div>
+    </div>
+  `).join('');
+}
+
+// ===== SELECT TASK =====
+async function selectTask(taskId) {
+  if (currentTaskId === taskId) return;
+  currentTaskId = taskId;
+  renderTaskList();
+
+  const task = myTasks.find(t => t.id === taskId);
+  document.getElementById('chat-title').textContent = task?.title || '任务聊天';
+  document.getElementById('chat-sub').textContent = task ? `¥${task.budget || 0} · ${task.category}` : '';
+
+  document.getElementById('no-chat').classList.add('hidden');
+  document.getElementById('chat-area').classList.remove('hidden');
+  document.getElementById('chat-area').style.display = 'flex';
+
+  await loadMessages();
+  setupRealtime(taskId);
+}
+
+// ===== LOAD MESSAGES =====
+async function loadMessages() {
+  if (!currentTaskId) return;
+  const { data } = await fetchMessages(currentTaskId);
+  renderMessages(data || []);
+}
+
+function renderMessages(msgs) {
+  const el = document.getElementById('chat-messages');
+  if (!msgs.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-light);font-size:13px;padding:40px 0;">暂无消息，开始聊天吧~</div>';
+    return;
+  }
+  el.innerHTML = msgs.map(m => {
+    const isMe = m.sender_id === window.CURRENT_USER?.id;
+    const name = isMe ? '我' : 'OPC';
+    return `
+    <div class="msg ${isMe ? 'user' : 'opc'}">
+      <div class="msg-avatar">${name[0]}</div>
+      <div>
+        <div class="msg-bubble">${escHtml(m.content)}</div>
+        <div class="msg-time">${timeAgo(m.created_at)}</div>
+      </div>
+    </div>
+  `}).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+// ===== SEND MESSAGE =====
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !currentTaskId) return;
+
+  const { error } = await insertMessage(currentTaskId, text);
+  if (error) {
+    showNotif('发送失败：' + error.message, 'error');
+    return;
+  }
+  input.value = '';
+  await loadMessages();
+}
+
+// ===== REALTIME =====
+function setupRealtime(taskId) {
+  if (realtimeChannel) {
+    realtimeChannel.unsubscribe();
+    realtimeChannel = null;
+  }
+
+  const sb = getSupabase();
+  realtimeChannel = sb.channel(`task-chat:${taskId}`)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages',
+      filter: `task_id=eq.${taskId}`
+    }, (payload) => {
+      const msg = payload.new;
+      if (msg.sender_id !== window.CURRENT_USER?.id) {
+        appendMessage(msg, false);
+      }
+    })
+    .subscribe();
+
+  document.getElementById('realtime-status').textContent = '● 实时同步';
+  document.getElementById('online-label').textContent = '实时同步中';
+}
+
+function appendMessage(msg, isMe) {
+  const el = document.getElementById('chat-messages');
+  const name = isMe ? '我' : 'OPC';
+  const div = document.createElement('div');
+  div.className = `msg ${isMe ? 'user' : 'opc'}`;
+  div.innerHTML = `
+    <div class="msg-avatar">${name[0]}</div>
+    <div>
+      <div class="msg-bubble">${escHtml(msg.content)}</div>
+      <div class="msg-time">${timeAgo(msg.created_at)}</div>
+    </div>
+  `;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ===== UTILS =====
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - new Date(ts).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return '刚刚';
+  if (mins < 60) return mins + '分钟前';
+  if (mins < 1440) return Math.floor(mins / 60) + '小时前';
+  return new Date(ts).toLocaleDateString('zh-CN');
+}
+
+init();
+</script>
 </body>
 </html>
