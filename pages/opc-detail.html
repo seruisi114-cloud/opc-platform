@@ -7,12 +7,6 @@
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-
-<div class="prototype-banner">
-  🎨 OPC职业平台测试 — 交互原型 · 仅供验证使用
-  <span>（数据均为模拟，不涉及真实交易）</span>
-</div>
-
 <nav>
   <a href="../index.html" class="nav-brand">OPC<span>职业平台</span></a>
   <div class="nav-links">
@@ -26,7 +20,6 @@
     <div class="avatar">我</div>
   </div>
 </nav>
-
 <div class="container">
   <div class="detail-header">
     <a href="opc-hall.html" class="back-btn">←</a>
@@ -69,7 +62,6 @@
     </div>
   </div>
 </div>
-
 <div class="notif" id="notif"></div>
 <script src="../js/app.js"></script>
 <script>
@@ -78,7 +70,6 @@
   const data = getData();
   const o = data.opcs.find(x => x.id === id);
   if (!o) { document.getElementById('opc-detail-name').textContent = 'OPC 未找到'; return; }
-
   document.getElementById('opc-detail-name').textContent = o.name + ' — ' + o.title;
   document.getElementById('opc-detail-bio').textContent = o.bio;
   document.getElementById('opc-detail-services').innerHTML = o.services.map(s => `<span class="tag tag-blue">${s}</span>`).join('');
@@ -91,10 +82,8 @@
   document.getElementById('opc-online-status').innerHTML = o.online
     ? `<div style="width:10px; height:10px; border-radius:50%; background:var(--success);"></div><span style="font-size:13px; font-weight:500; color:var(--success);">在线</span>`
     : `<div style="width:10px; height:10px; border-radius:50%; background:#D1D5DB;"></div><span style="font-size:13px; color:#6B7280;">离线</span>`;
-
   window._currentOPC = o;
 })();
-
 function inviteOPC() {
   const o = window._currentOPC;
   if (!o) return;
@@ -102,5 +91,7 @@ function inviteOPC() {
   setTimeout(() => location.href = 'chat.html', 1500);
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
 </body>
 </html>

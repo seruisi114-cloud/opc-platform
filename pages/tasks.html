@@ -7,12 +7,6 @@
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-
-<div class="prototype-banner">
-  🎨 OPC职业平台测试 — 交互原型 · 仅供验证使用
-  <span>（数据均为模拟，不涉及真实交易）</span>
-</div>
-
 <nav>
   <a href="../index.html" class="nav-brand">OPC<span>职业平台</span></a>
   <div class="nav-links">
@@ -26,7 +20,6 @@
     <div class="avatar">我</div>
   </div>
 </nav>
-
 <div class="container">
   <div class="section-header">
     <h1>任务大厅</h1>
@@ -53,7 +46,6 @@
   </div>
   <div class="task-list" id="task-list"></div>
 </div>
-
 <!-- PUBLISH MODAL -->
 <div class="modal-overlay hidden" id="publish-modal">
   <div class="modal">
@@ -101,7 +93,6 @@
     </div>
   </div>
 </div>
-
 <div class="notif" id="notif"></div>
 <script src="../js/app.js"></script>
 <script>
@@ -111,7 +102,6 @@ function renderTasks() {
   const budget = document.getElementById('filter-budget').value;
   const showShort = document.getElementById('filter-short').classList.contains('selected');
   const showLong = document.getElementById('filter-long').classList.contains('selected');
-
   const filtered = data.tasks.filter(t => {
     if (cat && t.category !== cat) return false;
     if (budget === 'low' && t.price >= 500) return false;
@@ -121,15 +111,15 @@ function renderTasks() {
     if (!showLong && t.type === 'long') return false;
     return true;
   });
-
   document.getElementById('task-list').innerHTML = filtered.length === 0
     ? `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">暂无符合条件的任务</div></div>`
     : filtered.map(t => taskCardHTML(t)).join('');
 }
-
 document.getElementById('filter-category').addEventListener('change', renderTasks);
 document.getElementById('filter-budget').addEventListener('change', renderTasks);
 renderTasks();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
 </body>
 </html>

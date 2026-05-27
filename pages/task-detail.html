@@ -7,12 +7,6 @@
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-
-<div class="prototype-banner">
-  🎨 OPC职业平台测试 — 交互原型 · 仅供验证使用
-  <span>（数据均为模拟，不涉及真实交易）</span>
-</div>
-
 <nav>
   <a href="../index.html" class="nav-brand">OPC<span>职业平台</span></a>
   <div class="nav-links">
@@ -26,7 +20,6 @@
     <div class="avatar">我</div>
   </div>
 </nav>
-
 <div class="container">
   <div class="detail-header">
     <a href="tasks.html" class="back-btn">←</a>
@@ -77,7 +70,6 @@
     </div>
   </div>
 </div>
-
 <div class="notif" id="notif"></div>
 <script src="../js/app.js"></script>
 <script>
@@ -86,7 +78,6 @@
   const data = getData();
   const t = data.tasks.find(x => x.id === id);
   if (!t) { document.getElementById('detail-title').textContent = '任务未找到'; return; }
-
   document.getElementById('detail-title').textContent = t.title;
   document.getElementById('detail-desc').textContent = t.desc;
   document.getElementById('detail-standards').innerHTML = t.standards.replace(/\n/g, '<br>');
@@ -97,9 +88,7 @@
   document.getElementById('detail-time').textContent = t.time;
   document.getElementById('detail-views').textContent = t.views;
   document.getElementById('detail-delivery').textContent = t.delivery ? '✅ 已提交：' + t.delivery : '等待 OPC 提交交付物';
-
   renderEscrowStatus('escrow-status', t.escrowStep);
-
   const ac = document.getElementById('detail-action-card');
   if (t.status === 'published') {
     ac.innerHTML = '<button class="btn btn-primary" onclick="acceptTask()">立即承接</button><a href="chat.html" class="btn btn-outline">💬 联系需求方</a>';
@@ -111,7 +100,6 @@
     ac.innerHTML = '<a href="chat.html" class="btn btn-outline">💬 进入对话</a>';
   }
 })();
-
 function acceptTask() {
   const id = parseInt(getParam('id'));
   const data = getData();
@@ -126,5 +114,7 @@ function acceptTask() {
   }
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase.js"></script>
 </body>
 </html>
